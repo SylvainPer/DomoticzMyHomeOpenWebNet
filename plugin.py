@@ -97,7 +97,7 @@ class BasePlugin:
         if self._connection.Connected():
             Domoticz.Status("Connected to Name: MyHome, Transport: Serial, Address: %s" % (self._serialPort))
             self._lastCmd = "join"
-            self._connection.Send("*13*60##")
+            self._connection.Send("*13*60##",2)
 
  
     
@@ -217,6 +217,8 @@ def FindUnit(self,where):
                 
 def checkNack(self, Data):
     if chr(Data[3]) == '0':
+        if self._lastCmd == "UpdateStatus": #If a device is outside the network, TODO
+            return
         Domoticz.Error("Nack on last command: " + self._lastCmd)
         if self._lastCmd == "join":
             self._connection.Send("*13*60*##",2)
