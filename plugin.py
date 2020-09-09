@@ -147,18 +147,19 @@ class BasePlugin:
         
         now = time.time()
         for unit in Devices:
-            LUpdate = Devices[unit].LastUpdate
-            try:
-                LUpdate = time.mktime(time.strptime(LUpdate, "%Y-%m-%d %H:%M:%S"))
-            except:
-                Domoticz.Error("Something wrong to decode Domoticz LastUpdate " %LUpdate)
-                break
-            if (now - LUpdate) > int(Parameters["Mode1"]):
-                cmd = "*#1*" + str(int(Devices[unit].DeviceID,16)) + "01#9##"
-                self._lastCmd = "UpdateStatus"
-                self._lastTargetUnit = unit
-                self._connection.Send(cmd) 
-                return
+            if Devices[unit].Unit != 255: #no need to update the push off
+                LUpdate = Devices[unit].LastUpdate
+                try:
+                    LUpdate = time.mktime(time.strptime(LUpdate, "%Y-%m-%d %H:%M:%S"))
+                except:
+                    Domoticz.Error("Something wrong to decode Domoticz LastUpdate " %LUpdate)
+                    break
+                if (now - LUpdate) > int(Parameters["Mode1"]):
+                    cmd = "*#1*" + str(int(Devices[unit].DeviceID,16)) + "01#9##"
+                    self._lastCmd = "UpdateStatus"
+                    self._lastTargetUnit = unit
+                    self._connection.Send(cmd) 
+                    return
                 
 
     def onDeviceRemoved( self,Unit ):
