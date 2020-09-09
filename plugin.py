@@ -19,7 +19,7 @@
     </description>
     <params>
         <param field="SerialPort" label="Serial Port" width="150px" required="true" default="/dev/ttyUSB0"/>
-        <param field="Mode1" label="Time between refreshs in s" width="75px" required="true" default="300" />
+        <param field="Mode1" label="Time between two device updates in s" width="75px" required="true" default="300" />
     </params>
 </plugin>
 """
