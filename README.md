@@ -8,6 +8,8 @@ The plugin starts by joining and scanning the network.
 All the devices must join the same network as the USB key (controller).
 The Micromodules are added to domoticz automatically after the network scan.
 A general push button allows to switch off all the devices.
+The remote orders are not sent on the network, the learning create a direct link.
+Each device is check every 5 minutes to update its state (see options).
 
 ## USB key
 * Bticino 3578: https://catalogo.bticino.it/BTI-3578-IT
