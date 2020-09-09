@@ -19,7 +19,6 @@
     </description>
     <params>
         <param field="SerialPort" label="Serial Port" width="150px" required="true" default="/dev/ttyUSB0"/>
-        </param>
     </params>
 </plugin>
 """
