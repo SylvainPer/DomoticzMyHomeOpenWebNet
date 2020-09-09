@@ -10,11 +10,12 @@
         <h2> Plugin MyHome for Domoticz with Legrand/Bticino USB dongle</h2><br/>
     <h3> Short description </h3>
            This plugin allow Domoticz to access to the MyHome (Zigbee based) worlds of devices.<br/>
-           Only Lights are supported.
-           
-           USB zigbee key:
-            - Bticino 3578: https://catalogo.bticino.it/BTI-3578-IT
-            - legrand 088328
+           Only Lights are supported.<br/>
+           USB zigbee key:<br/>
+           <ul style="list-style-type:square">
+           <li>Bticino 3578: https://catalogo.bticino.it/BTI-3578-IT</li>
+           <li>legrand 088328</li>
+           </ul>
     </description>
     <params>
         <param field="SerialPort" label="Serial Port" width="150px" required="true" default="/dev/ttyUSB0"/>
