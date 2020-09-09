@@ -97,7 +97,7 @@ class BasePlugin:
         if self._connection.Connected():
             Domoticz.Status("Connected to Name: MyHome, Transport: Serial, Address: %s" % (self._serialPort))
             self._lastCmd = "join"
-            self._connection.Send("*13*60##",2)
+            self._connection.Send("*13*60##")
 
  
     
