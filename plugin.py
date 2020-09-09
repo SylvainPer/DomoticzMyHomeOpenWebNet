@@ -19,6 +19,7 @@
     </description>
     <params>
         <param field="SerialPort" label="Serial Port" width="150px" required="true" default="/dev/ttyUSB0"/>
+        <param field="Mode1" label="Time between refreshs in s" width="75px" required="true" default="300" />
     </params>
 </plugin>
 """
@@ -152,7 +153,7 @@ class BasePlugin:
             except:
                 Domoticz.Error("Something wrong to decode Domoticz LastUpdate " %LUpdate)
                 break
-            if (now - LUpdate) > 300:
+            if (now - LUpdate) > int(Parameters["Mode1"]):
                 cmd = "*#1*" + str(int(Devices[unit].DeviceID,16)) + "01#9##"
                 self._lastCmd = "UpdateStatus"
                 self._lastTargetUnit = unit
@@ -184,7 +185,7 @@ def scanNetworkDevices(self):
     else: #Scan finished
         self._scannedNetwork = True
         self._scanningNetwork = False
-        self._HBRate = 3 #HeartBeat each 30s
+        self._HBRate = 2 #HeartBeat each 20s
         Domoticz.Status("Scan finished")
 
 def decode_Data(self,Data):
