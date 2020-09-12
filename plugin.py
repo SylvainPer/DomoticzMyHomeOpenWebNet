@@ -5,7 +5,7 @@
 #
 
 """
-<plugin key="MyHome" name="MyHome plugin" author="Deufo" version="0.10" wikilink="https://" externallink="https://github.com/sylvainper">
+<plugin key="MyHome" name="MyHome plugin" author="Deufo" version="0.20" wikilink="https://" externallink="https://github.com/sylvainper">
     <description>
         <h2> Plugin MyHome for Domoticz with Legrand/Bticino USB dongle</h2><br/>
         <h3> Short description </h3>
@@ -276,8 +276,8 @@ def statusGateway(self,Data): # WHO = 13
                 break
         if id not in Devices:
             if chr(Data[i-3]) == '2' and chr(Data[i-2]) == '5' and chr(Data[i-1]) == '6':
-                Domoticz.Device(DeviceID = str(hex(int(where))), Name = "Switch" + str(id),  Unit = id, TypeName = "Switch").Create()
-                Domoticz.Status("Device Switch " + str(id) + " with DeviceID " + str(hex(int(where))) + " created.")
+                Domoticz.Device(DeviceID = str(hex(int(where))), Name = "Switch" + str(id+1),  Unit = id+1, TypeName = "Switch").Create()
+                Domoticz.Status("Device Switch " + str(id+1) + " with DeviceID " + str(hex(int(where))) + " created.")
 
         scanNetworkDevices(self)
 
