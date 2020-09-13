@@ -274,10 +274,11 @@ def statusGateway(self,Data): # WHO = 13
             i += 1
             if chr(Data[i]) == '#':
                 break
+        id += 1
         if id not in Devices:
             if chr(Data[i-3]) == '2' and chr(Data[i-2]) == '5' and chr(Data[i-1]) == '6':
-                Domoticz.Device(DeviceID = str(hex(int(where))), Name = "Switch" + str(id+1),  Unit = id+1, TypeName = "Switch").Create()
-                Domoticz.Status("Device Switch " + str(id+1) + " with DeviceID " + str(hex(int(where))) + " created.")
+                Domoticz.Device(DeviceID = str(hex(int(where))), Name = "Switch" + str(id),  Unit = id, TypeName = "Switch").Create()
+                Domoticz.Status("Device Switch " + str(id) + " with DeviceID " + str(hex(int(where))) + " created.")
 
         scanNetworkDevices(self)
 
