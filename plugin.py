@@ -182,7 +182,7 @@ def scanNetworkDevices(self):
         self._scannedDevice -= 1
         cmd = "*#13**66*" + str(self._scannedDevice) + "##"
         self._lastCmd = "product_information " + str(self._scannedDevice)
-        self._connection.Send(cmd)
+        self._connection.Send(cmd,1)
     else: #Scan finished
         self._scannedNetwork = True
         self._scanningNetwork = False
