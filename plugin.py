@@ -171,7 +171,7 @@ class BasePlugin:
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage")
         if Data is not None:
-            Domoticz.Status("Rcv: " + repr(Data) )
+            Domoticz.Debug("Rcv: " + repr(Data) )
             if chr(Data[0]) != '*' :
                 Domoticz.Error("Received frame format is not correct.")
             else:
