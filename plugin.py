@@ -5,7 +5,7 @@
 #
 
 """
-<plugin key="MyHome" name="MyHome plugin" author="Deufo" version="0.20" wikilink="https://" externallink="https://github.com/sylvainper">
+<plugin key="MyHome" name="MyHome plugin" author="Deufo" version="0.21" wikilink="https://" externallink="https://github.com/sylvainper">
     <description>
         <h2> Plugin MyHome for Domoticz with Legrand/Bticino USB dongle</h2><br/>
         <h3> Short description </h3>
@@ -20,6 +20,12 @@
     <params>
         <param field="SerialPort" label="Serial Port" width="150px" required="true" default="/dev/ttyUSB0"/>
         <param field="Mode1" label="Time between two device updates in s" width="75px" required="true" default="300" />
+        <param field="Mode6" label="Verbors and Debuging" width="150px" required="true" default="None">
+            <options>
+                        <option label="None" value="0"  default="true"/>
+                        <option label="Debug" value="2"/>
+            </options>
+        </param>    
     </params>
 </plugin>
 """
@@ -87,12 +93,12 @@ class BasePlugin:
             
             
     def onStop(self):
-        Domoticz.Debug("onStop")
+        logging(self, "onStop")
         
         
     
     def onConnect(self, Connection, Status, Description):
-        Domoticz.Debug("onConnect")
+        logging(self, "onConnect")
         
         if self._connection.Connected():
             Domoticz.Status("Connected to Name: MyHome, Transport: Serial, Address: %s" % (self._serialPort))
@@ -102,7 +108,7 @@ class BasePlugin:
  
     
     def onCommand(self, Unit, Command, Level, Color):
-        Domoticz.Debug("onCommand called: Unit=" + str(Unit) + ", Parameter=" + str(Command) + ", Level=" + str(Level))
+        logging(self, "onCommand called: Unit=" + str(Unit) + ", Parameter=" + str(Command) + ", Level=" + str(Level))
        
         cmd = "*1*"
         if str(Command) == "On":
@@ -119,7 +125,7 @@ class BasePlugin:
         
         cmd += "01#9##"
         
-        Domoticz.Debug("Send: " + cmd)
+        logging(self, "Send: " + cmd)
         self._lastCmd = str(Command)
         self._lastTargetUnit = Unit
         self._connection.Send(cmd)        
@@ -130,7 +136,7 @@ class BasePlugin:
         if (self.internalHB % self._HBRate != 0):
             return
         
-        Domoticz.Debug("onHeartbeat")
+        logging(self, "onHeartbeat")
         
         if not self._connection.Connected():                
             Domoticz.Error("Not connected")
@@ -163,15 +169,15 @@ class BasePlugin:
                 
 
     def onDeviceRemoved( self,Unit ):
-        Domoticz.Debug("onDeviceRemoved")
+        logging(self, "onDeviceRemoved")
         
     def onDisconnect(self,Connection):
-        Domoticz.Debug("onDisconnect")
+        logging(self, "onDisconnect")
         
     def onMessage(self, Connection, Data):
-        Domoticz.Debug("onMessage")
+        logging(self, "onMessage")
         if Data is not None:
-            Domoticz.Debug("Rcv: " + repr(Data) )
+            logging(self, "Rcv: " + repr(Data) )
             if chr(Data[0]) != '*' :
                 Domoticz.Error("Received frame format is not correct.")
             else:
@@ -205,7 +211,7 @@ def decode_Data(self,Data):
             if chr(Data[i+2]) == '#':
                 break
             where += str(chr(Data[i]))
-        Domoticz.Debug("Device found id: " + str(hex(int((where)))))
+        logging(self, "Device found id: " + str(hex(int((where)))))
         unit = FindUnit(self,str(hex(int(where))))
         if unit is not None:
            Devices[unit].Update(nValue = nValue,sValue=str(nValue))
@@ -281,6 +287,14 @@ def statusGateway(self,Data): # WHO = 13
                 Domoticz.Status("Device Switch " + str(id) + " with DeviceID " + str(hex(int(where))) + " created.")
 
         scanNetworkDevices(self)
+
+def logging(self, msg):
+    if Parameters["Mode6"] != "0":
+        Domoticz.Log(msg)
+    else:
+        Domoticz.Debug(msg)
+
+
 
 global _plugin
 _plugin = BasePlugin()
