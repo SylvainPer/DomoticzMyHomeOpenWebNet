@@ -5,7 +5,7 @@
 #
 
 """
-<plugin key="MyHome" name="MyHome plugin" author="Deufo" version="0.21" wikilink="https://" externallink="https://github.com/sylvainper">
+<plugin key="MyHome" name="MyHome plugin" author="Deufo" version="0.22" wikilink="https://" externallink="https://github.com/sylvainper">
     <description>
         <h2> Plugin MyHome for Domoticz with Legrand/Bticino USB dongle</h2><br/>
         <h3> Short description </h3>
@@ -20,6 +20,12 @@
     <params>
         <param field="SerialPort" label="Serial Port" width="150px" required="true" default="/dev/ttyUSB0"/>
         <param field="Mode1" label="Time between two device updates in s" width="75px" required="true" default="300" />
+        <param field="Mode3" label="Scan Network Needed" width="75px" required="true" default="False" >
+            <options>
+                <option label="True" value="True"/>
+                <option label="False" value="False" default="true" />
+            </options>
+        </param>
         <param field="Mode6" label="Verbors and Debuging" width="150px" required="true" default="None">
             <options>
                         <option label="None" value="0"  default="true"/>
@@ -43,7 +49,7 @@ class BasePlugin:
         self.internalHB = 0
         self._HBRate = 1
         self._NbDevicesNetwork = 0
-        self._scannedDevice = None
+        self._scannedDevice = 0
         
         # Communication/Transport link attributes
         self._connection = None  # connection handle
@@ -62,11 +68,17 @@ class BasePlugin:
         Domoticz.Status("onStart")
         self._joinedNetwork = False
         self._scanningNetwork = False
-        self._scannedNetwork = False
+        self._scannedNetwork = True
     
         # loggingPlugin( self, 'Debug', "ListOfDevices : " )
         # for e in self.ListOfDevices.items(): 
             # loggingPlugin( self, 'Debug', " "+str(e))
+
+        debug = 0
+        if Parameters["Mode6"] != "0":
+            Domoticz.Debugging(1)
+            debug = 1
+
         id = 255
         if id not in Devices:
             Domoticz.Device(Name = "Switch all off",  Unit = id, TypeName = "Push Off").Create()
@@ -93,12 +105,13 @@ class BasePlugin:
             
             
     def onStop(self):
-        logging(self, "onStop")
+        self._connection.Send("*13*31*##")
+        Domoticz.Debug("onStop")
         
         
     
     def onConnect(self, Connection, Status, Description):
-        logging(self, "onConnect")
+        Domoticz.Debug("onConnect")
         
         if self._connection.Connected():
             Domoticz.Status("Connected to Name: MyHome, Transport: Serial, Address: %s" % (self._serialPort))
@@ -108,7 +121,7 @@ class BasePlugin:
  
     
     def onCommand(self, Unit, Command, Level, Color):
-        logging(self, "onCommand called: Unit=" + str(Unit) + ", Parameter=" + str(Command) + ", Level=" + str(Level))
+        Domoticz.Debug("onCommand called: Unit=" + str(Unit) + ", Parameter=" + str(Command) + ", Level=" + str(Level))
        
         cmd = "*1*"
         if str(Command) == "On":
@@ -125,7 +138,7 @@ class BasePlugin:
         
         cmd += "01#9##"
         
-        logging(self, "Send: " + cmd)
+        Domoticz.Debug("Send: " + cmd)
         self._lastCmd = str(Command)
         self._lastTargetUnit = Unit
         self._connection.Send(cmd)        
@@ -136,7 +149,7 @@ class BasePlugin:
         if (self.internalHB % self._HBRate != 0):
             return
         
-        logging(self, "onHeartbeat")
+        Domoticz.Debug("onHeartbeat")
         
         if not self._connection.Connected():                
             Domoticz.Error("Not connected")
@@ -146,12 +159,15 @@ class BasePlugin:
         if self._joinedNetwork == False :
             self._lastCmd = "join"
             self._connection.Send("*13*60*##")
+            Domoticz.Debug("Send: " + str(cmd)) 
             return
         
-        if self._scannedNetwork == False: 
+        if self._scannedNetwork == False:
+            Domoticz.Debug("Network not scanned yet")  
             return    
         
         now = time.time()
+
         for unit in Devices:
             if Devices[unit].Unit != 255: #no need to update the push off
                 LUpdate = Devices[unit].LastUpdate
@@ -160,24 +176,26 @@ class BasePlugin:
                 except:
                     Domoticz.Error("Something wrong to decode Domoticz LastUpdate " %LUpdate)
                     break
+                #Domoticz.Debug("Unit: " + str(Devices[unit].Unit) + ', Time: ' + str(now - LUpdate) )     
                 if (now - LUpdate) > int(Parameters["Mode1"]):
                     cmd = "*#1*" + str(int(Devices[unit].DeviceID,16)) + "01#9##"
                     self._lastCmd = "UpdateStatus"
                     self._lastTargetUnit = unit
-                    self._connection.Send(cmd) 
+                    self._connection.Send(cmd)
+                    Domoticz.Debug("Send: " + str(cmd)) 
                     return
                 
 
     def onDeviceRemoved( self,Unit ):
-        logging(self, "onDeviceRemoved")
+        Domoticz.Debug("onDeviceRemoved")
         
     def onDisconnect(self,Connection):
-        logging(self, "onDisconnect")
+        Domoticz.Debug("onDisconnect")
         
     def onMessage(self, Connection, Data):
-        logging(self, "onMessage")
+        #Domoticz.Debug("onMessage")
         if Data is not None:
-            logging(self, "Rcv: " + repr(Data) )
+            Domoticz.Debug("Rcv: " + repr(Data) )
             if chr(Data[0]) != '*' :
                 Domoticz.Error("Received frame format is not correct.")
             else:
@@ -189,6 +207,7 @@ def scanNetworkDevices(self):
         cmd = "*#13**66*" + str(self._scannedDevice) + "##"
         self._lastCmd = "product_information " + str(self._scannedDevice)
         self._connection.Send(cmd,1)
+        Domoticz.Debug("Send: " + str(cmd)) 
     else: #Scan finished
         self._scannedNetwork = True
         self._scanningNetwork = False
@@ -211,10 +230,10 @@ def decode_Data(self,Data):
             if chr(Data[i+2]) == '#':
                 break
             where += str(chr(Data[i]))
-        logging(self, "Device found id: " + str(hex(int((where)))))
+        Domoticz.Debug("Device found id: " + str(hex(int((where)))))
         unit = FindUnit(self,str(hex(int(where))))
         if unit is not None:
-           Devices[unit].Update(nValue = nValue,sValue=str(nValue))
+           Devices[unit].Update(nValue = nValue,sValue=str(nValue),TimedOut=0)
         
 def FindUnit(self,where):
     for item in Devices:
@@ -225,6 +244,7 @@ def FindUnit(self,where):
 def checkNack(self, Data):
     if chr(Data[3]) == '0':
         if self._lastCmd == "UpdateStatus": #If a device is outside the network, TODO
+            Devices[self._lastTargetUnit].Update(nValue = 0,sValue="0",TimedOut = 1)
             return
         Domoticz.Error("Nack on last command: " + self._lastCmd)
         if self._lastCmd == "join":
@@ -239,9 +259,9 @@ def checkNack(self, Data):
             Domoticz.Status("Scan network begin.")
             self._scanningNetwork = True
         elif self._lastCmd == "On":
-            Devices[self._lastTargetUnit].Update(nValue = 1,sValue="1")
+            Devices[self._lastTargetUnit].Update(nValue = 1,sValue="1",TimedOut = 0)
         elif self._lastCmd == "Off":
-            Devices[self._lastTargetUnit].Update(nValue = 0,sValue="0")
+            Devices[self._lastTargetUnit].Update(nValue = 0,sValue="0",TimedOut = 0)
             if self._lastTargetUnit == 255 : #All off
                 for item in Devices:
                     Devices[item].Update(nValue = 0,sValue="0")
@@ -260,7 +280,9 @@ def statusGateway(self,Data): # WHO = 13
             else:
                 return
             self._scannedDevice = self._NbDevicesNetwork # device nb to scan
-            scanNetworkDevices(self)
+            if Parameters["Mode3"] == "True":
+                self._scannedNetwork = False
+                scanNetworkDevices(self)
     else:
         where = str(chr(Data[5]))
         i = 5
@@ -287,12 +309,6 @@ def statusGateway(self,Data): # WHO = 13
                 Domoticz.Status("Device Switch " + str(id) + " with DeviceID " + str(hex(int(where))) + " created.")
 
         scanNetworkDevices(self)
-
-def logging(self, msg):
-    if Parameters["Mode6"] != "0":
-        Domoticz.Log(msg)
-    else:
-        Domoticz.Debug(msg)
 
 
 
